@@ -1,0 +1,691 @@
+<!DOCTYPE html>
+<!-- Declaração do tipo de documento, indicando que este arquivo é HTML5 -->
+<html lang="pt-BR">
+<!-- Define o idioma principal do documento como português do Brasil -->
+
+<head>
+    <!-- Cabeçalho da página, contendo metadados e estilos -->
+    <meta charset="UTF-8">
+    <!-- Define a codificação de caracteres como UTF-8, garantindo suporte a caracteres especiais -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Configura o viewport para dispositivos móveis, garantindo que a página seja responsiva -->
+    <title>Chat de Suporte</title>
+    <!-- Define o título da página que aparece na aba do navegador -->
+
+    <style>
+        @media (max-width: 768px) {
+
+            /* Define uma regra de estilo para quando a largura da tela for menor ou igual a 768px (geralmente para dispositivos móveis ou telas menores). */
+            #chat-container {
+                width: 100%;
+                /* Define a largura do contêiner do chat como 100% da largura da tela, ocupando toda a largura disponível no dispositivo. */
+                height: 80vh;
+                /* Define a altura do contêiner do chat como 80% da altura da tela (80vh significa 80% da altura da viewport). */
+            }
+
+            .chat-icon {
+                bottom: 10px;
+                /* Define a posição do ícone de chat a 10px do fundo da tela, movendo-o um pouco para cima em dispositivos menores. */
+                right: 10px;
+                /* Define a posição do ícone de chat a 10px da borda direita da tela, garantindo que ele fique no canto inferior direito. */
+            }
+
+            .chat-input input,
+            .chat-input button {
+                border-radius: 25px;
+                /* Garantindo o arredondamento no mobile */
+            }
+
+            .message.bot,
+            .message.user {
+                border-radius: 25px;
+                /* Garantindo o arredondamento no mobile */
+            }
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            /* Definindo a fonte padrão como Arial ou secundária fonte sans-serif */
+            background-color: #f4f4f4;
+            /* Cor de fundo do corpo da página como um cinza claro */
+            display: flex;
+            /* Usando flexbox para centralizar os elementos dentro do body */
+            justify-content: flex-end;
+            /* Alinhando os itens ao final da linha (direita) */
+            align-items: center;
+            /* Alinhando os itens ao centro verticalmente */
+            height: 100vh;
+            /* Definindo a altura da tela para ocupar 100% da altura da janela do navegador */
+            margin: 0;
+            /* Removendo a margem padrão do body */
+        }
+
+        .chat-container {
+            width: 320px;
+            /* Definindo a largura fixa de 320px para o chat */
+            background-color: #ffffff;
+            /* Cor de fundo branca para o chat */
+            border-radius: 8px;
+            /* Bordas arredondadas para o contêiner */
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            /* Sombra suave para criar uma sensação de profundidade */
+            display: none;
+            /* Inicialmente, o chat estará invisível */
+            flex-direction: column;
+            /* Definindo o layout flexbox para empilhar os elementos de forma vertical */
+            overflow: hidden;
+            /* Garantindo que o conteúdo do chat não ultrapasse o contêiner, adicionando a barra de rolagem se necessário */
+            position: fixed;
+            /* Posicionamento fixo, o que significa que o chat ficará fixo na tela em qualquer rolagem */
+            bottom: 90px;
+            /* Distância de 90px do fundo da tela */
+            right: 20px;
+            /* Distância de 20px da borda direita da tela */
+            padding-bottom: 11px;
+            /* Aumenta o espaço inferior */
+        }
+
+        .chat-header {
+            background-color: #151d6d;
+            /* Cor de fundo do cabeçalho em um tom de azul escuro */
+            color: #ffffff;
+            /* Cor do texto no cabeçalho em branco */
+            padding: 10px;
+            /* Espaçamento interno de 10px ao redor do texto */
+            text-align: center;
+            /* Alinhamento do texto no centro do cabeçalho */
+        }
+
+        /* Estilo do cabeçalho do chat */
+        .chat-header {
+            background-color: #151d6d;
+            /* Cor de fundo do cabeçalho em um tom de azul escuro */
+            color: #ffffff;
+            /* Cor do texto no cabeçalho em branco */
+            padding: 10px;
+            /* Espaçamento interno de 10px ao redor do texto */
+            text-align: center;
+            /* Alinhamento do texto no centro do cabeçalho */
+        }
+
+        .chat-topics {
+            /* Área de tópicos de dúvida */
+            padding: 10px;
+            /* Espaçamento interno */
+            border-bottom: 1px solid #ddd;
+            /* Linha separadora na parte inferior */
+        }
+
+        .chat-topics h4 {
+            /* Título da área de tópicos */
+            margin: 0;
+            /* Remove margens externas */
+            padding-bottom: 10px;
+            /* Espaçamento inferior */
+            border-bottom: 1px solid #ddd;
+            /* Linha separadora */
+        }
+
+        .chat-topics ul {
+            /* Lista de tópicos */
+            list-style: none;
+            /* Remove marcadores padrão */
+            padding: 0;
+            /* Remove espaçamento interno */
+        }
+
+        .chat-topics li {
+            /* Estilização dos itens de tópicos */
+            padding: 10px;
+            /* Espaçamento interno */
+            cursor: pointer;
+            /* Aponta que o elemento é clicável */
+            transition: background-color 0.3s;
+            /* Adiciona transição suave no fundo */
+            border: 1px solid #001254;
+            /* Adiciona borda azul-escuro */
+            border-radius: 25px;
+            /* Bordas arredondadas */
+            margin-bottom: 5px;
+            /* Espaçamento entre itens */
+        }
+
+        .chat-topics li:hover {
+            /* Efeito ao passar o mouse sobre os tópicos */
+            background-color: #0059c588;
+            /* Altera o fundo para azul claro */
+            text-align: center;
+            /* Centraliza o texto */
+        }
+
+        .chat-messages {
+            /* Área onde as mensagens aparecem */
+            flex: 1;
+            /* Ocupa o espaço disponível */
+            padding: 10px;
+            /* Espaçamento interno */
+            overflow-y: auto;
+            /* Permite rolagem vertical */
+            background-color: #f4f4f4;
+            /* Fundo cinza claro */
+            display: block;
+            /* Exibe o elemento como um bloco */
+            max-height: 200px;
+            /* Altura máxima permitida */
+            text-align: right;
+            /* Alinha as mensagens a direita */
+        }
+
+        .chat-input {
+            display: flex;
+            /* Usa layout flex para alinhar o botão e o campo de entrada na mesma linha */
+            border-top: none;
+            /* Remove a borda superior */
+            padding: 0;
+            /* Remove os espaçamentos extras */
+            background-color: #f9f9f9;
+            /* Define uma cor de fundo para o contêiner geral */
+            border-radius: 25px;
+            /* Torna o contêiner arredondado */
+            border: 1px solid #ccc;
+            /* Adiciona uma borda leve ao redor */
+            overflow: hidden;
+            /* Garante que o conteúdo dentro do contêiner fique alinhado */
+        }
+
+        .chat-input input {
+            flex: 1;
+            /* Faz o campo de entrada ocupar o máximo de espaço possível */
+            padding: 10px;
+            /* Adiciona espaçamento interno */
+            border: none;
+            /* Remove a borda do campo de entrada */
+            background-color: transparent;
+            /* Define o fundo como transparente para herdar o fundo do contêiner */
+            border-radius: 25px;
+            /* Remove o arredondamento individual */
+            outline: none;
+            /* Remove o contorno ao clicar no campo */
+        }
+
+        .chat-input button {
+            padding: 10px 20px;
+            /* Adiciona espaçamento interno ao botão */
+            background-color: #0076E1;
+            /* Define a cor de fundo do botão */
+            color: white;
+            /* Define a cor do texto */
+            border: none;
+            /* Remove a borda do botão */
+            cursor: pointer;
+            /* Indica que o botão é clicável */
+            border-radius: 25px;
+            /* Remove o arredondamento individual */
+            outline: none;
+            /* Remove o contorno ao focar no botão */
+        }
+
+        .chat-input button:hover {
+            /* Efeito ao passar o mouse sobre o botão */
+            background-color: #0059c5;
+            /* Fundo com azul mais claro */
+        }
+
+        .message {
+            /*Contém as propriedades básicas para todas as mensagens */
+            margin-bottom: 10px;
+            /* Adiciona um espaço inferior de 10px entre as mensagens para separar visualmente cada uma delas */
+            padding: 10px;
+            /* Adiciona um espaço interno de 10px em torno do conteúdo da mensagem, tornando-a mais legível */
+            border-radius: 10px;
+            /* Arredonda os cantos da mensagem para um design mais moderno e amigável */
+            max-width: 80%;
+            /* Define uma largura máxima de 80% do contêiner pai, para que as mensagens não ocupem toda a tela */
+            display: block;
+            /* Faz com que a mensagem seja exibida como um bloco em linha, permitindo que múltiplas mensagens sejam alinhadas corretamente */
+        }
+
+        .message.user {
+            /* Estiliza especificamente as mensagens enviadas pelo usuário */
+            background-color: #CCCCCC;
+            /* Define o fundo da mensagem do usuário como azul escuro */
+            color: #000000;
+            /* Altera a cor do texto para preto */
+            text-align: right;
+            /* Alinha o texto da mensagem do usuário à direita */
+            float: right;
+            /* Posiciona a mensagem do usuário no lado direito do contêiner flex */
+            border-radius: 25px;
+        }
+
+        .message.bot {
+            /*Estiliza as mensagens do bot */
+            background-color: #0076E1;
+            /* Define o fundo da mensagem do bot como cinza claro, diferenciando-a da mensagem do usuário */
+            color: #ffffff;
+            /* Define a cor do texto como preto para garantir contraste sobre o fundo cinza */
+            text-align: left;
+            /* Alinha o texto da mensagem do bot à esquerda */
+            float: left;
+            /* Posiciona a mensagem do bot no lado esquerdo do contêiner flex */
+            border-radius: 25px;
+        }
+
+        .message.attention {
+            /* Estilo específico para a mensagem de sugestão */
+            background-color: #0073D9;
+            /* Cor de fundo azul chamativo */
+            color: #ffffff;
+            /* Cor do texto preta para contraste */
+            font-size: 12px;
+            /* Diminui o tamanho da fonte */
+            font-weight: bold;
+            /* Deixa o texto em negrito para chamar mais atenção */
+            border: 2px solid #004A96;
+            /* Borda azul claro para destaque */
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            /* Sombra para dar um efeito de destaque */
+        }
+
+        .typing-indicator {
+            /*Representa um elemento que indica que o bot está digitando */
+            display: none;
+            /* Inicialmente, oculta o indicador de digitação */
+            color: #001254;
+            /* Define a cor do texto do indicador como azul escuro */
+            font-style: italic;
+            /* Define o estilo da fonte como itálico. */
+            font-size: 16px;
+            /* Define o tamanho da fonte como 14px. */
+            margin: 10px;
+            /* Adiciona uma margem de 10px ao redor do elemento para espaçamento. */
+            text-align: left;
+            /* Alinha o texto à esquerda dentro do elemento. */
+            position: absolute;
+            /* Posiciona o elemento de forma absoluta em relação ao contêiner pai, para manter na parte inferior */
+            bottom: 40px;
+            /* Define a posição do elemento a 30px do fundo da janela ou contêiner pai. */
+            left: 5px;
+            /* Posiciona o elemento a 5px da borda esquerda. */
+        }
+
+        .chat-icon {
+            position: fixed;
+            /* Fixa o ícone na tela para que ele fique visível ao rolar a página */
+            bottom: 20px;
+            /* Distância de 20px do fundo da tela */
+            right: 20px;
+            /* Distância de 20px da borda direita da tela */
+            background-color: #0076E1;
+            /* Cor do ícone de chat (igual ao botão) */
+            color: white;
+            /* Cor branca para o ícone */
+            padding: 15px;
+            /* Espaçamento interno de 15px */
+            border-radius: 50%;
+            /* Bordas arredondadas para fazer o ícone em forma de círculo */
+            cursor: pointer;
+            /* Altera o cursor para indicar que o ícone é clicável */
+        }
+
+        .chat-icon:hover {
+            background-color: #0059c5;
+            /* Muda a cor de fundo para um tom mais escuro ao passar o mouse */
+        }
+
+        .username-input-container {
+            /* Define o contêiner principal que agrupa o campo de entrada do nome de usuário e o botão */
+            display: flex;
+            /* Define o contêiner como um flexbox, permitindo o controle fácil de alinhamento e posicionamento dos elementos internos */
+            flex-direction: column;
+            /* Alinha os elementos (campo de entrada e botão) em uma coluna, exibindo-os um abaixo do outro */
+            padding: 20px;
+            /* Adiciona um espaço interno de 20 pixels ao redor do contêiner, criando espaçamento entre o contêiner e seus elementos */
+        }
+
+        .username-input-container input {
+            /* Estiliza o campo de entrada do nome */
+            padding: 10px;
+            /* Adiciona um espaço interno de 10 pixels dentro do campo de entrada */
+            margin-bottom: 10px;
+            /* Adiciona um espaço de 10 pixels abaixo do campo de entrada, separando-o visualmente do botão */
+            border-radius: 5px;
+            /* Arredonda os cantos do campo de entrada em 5 pixels */
+            border: 1px solid #ccc;
+            /* Define uma borda cinza clara ao redor do campo de entrada */
+        }
+
+        .username-input-container button {
+            /* Estiliza o botão para iniciar o chat */
+            padding: 10px;
+            /* Adiciona um espaço interno de 10 pixels dentro do botão, tornando-o maior e mais clicável */
+            background-color: #0076E1;
+            /* Define a cor de fundo do botão como azul escuro */
+            color: #ffffff;
+            /* Define a cor do texto do botão como branco */
+            border: none;
+            /* Remove quaisquer bordas padrão do botão */
+            border-radius: 5px;
+            /* Arredonda os cantos do botão em 5 pixels */
+            cursor: pointer;
+            /* Altera o cursor para um ponteiro (mãozinha) ao passar o mouse sobre o botão, indicando interatividade */
+        }
+
+        .username-input-container button:hover {
+            background-color: #000933;
+            /* Altera a cor de fundo do botão para um tom mais escuro de azul quando o mouse passa sobre ele, adicionando feedback visual */
+        }
+
+        .time {
+            font-size: 12px;
+            /* Define o tamanho da fonte do horário para 12px */
+            color: #b9afaf;
+            /* Define a cor do texto do horário como cinza claro */
+            margin-right: 60px;
+            /* Adiciona um espaço de 8px à direita do horário */
+            display: inline-block;
+            /* Exibe o horário como um bloco em linha, permitindo que ele apareça na mesma linha que o conteúdo */
+            min-width: 40px;
+            /* Garante que o horário tenha um tamanho mínimo de 40px, mantendo uma largura consistente */
+        }
+
+        .message .time {
+            /* Estilos específicos para a classe .time dentro da .message */
+            margin-right: 5px;
+            /* Reduz o espaço à direita do horário para 5px dentro da mensagem */
+            bottom: -15px;
+            /* Move o horário para baixo em 15px em relação à parte inferior da mensagem */
+        }
+
+        #chat-container {
+            display: none;
+            /* Inicialmente, o contêiner do chat não é exibido (display: none). Ele fica oculto na página. */
+            opacity: 0;
+            /* A opacidade do contêiner é definida como 0, o que o torna invisível na página. */
+            transform: translateY(20px);
+            /* O contêiner é movido para baixo por 20px (no eixo Y), para que ele comece fora da tela (para um efeito de animação). */
+            transition: opacity 0.3s ease, transform 0.3s ease;
+            /* Define uma transição suave para as propriedades 'opacity' e 'transform' com duração de 0.3 segundos.
+   O 'ease' faz a animação começar devagar, acelerar no meio e desacelerar no final. */
+        }
+
+        #chat-container.show {
+            display: flex;
+            /* Quando o contêiner receber a classe 'show', ele será exibido com o valor 'flex', permitindo o layout flexível dentro dele. */
+            opacity: 1;
+            /* A opacidade é definida como 1, tornando o contêiner visível na página. */
+            transform: translateY(0);
+            /* O contêiner é movido de volta para sua posição original (0px no eixo Y). */
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Início do corpo da página -->
+
+    <!-- Ícone para abrir/fechar o chat -->
+    <div class="chat-icon" onclick="toggleChat()">💬</div>
+    <!-- Um ícone circular com um balão de diálogo, que ao ser clicado chama a função "toggleChat()" para mostrar ou esconder o chat -->
+
+    <!-- Contêiner principal do chat -->
+    <div class="chat-container" id="chat-container">
+        <!-- Área fixa do chat, inicialmente escondida -->
+
+        <!-- Cabeçalho do chat -->
+        <div class="chat-header">
+            <h3>Suporte ao Cliente</h3>
+            <!-- Título do chat, visível no topo do contêiner -->
+        </div>
+
+        <!-- Campo para entrada do nome de usuário -->
+        <div class="username-input-container" id="username-input-container">
+            <!-- Essa área solicita o nome do usuário antes de iniciar o chat -->
+            <input type="text" id="username" placeholder="Digite seu nome">
+            <!-- Campo de texto onde o usuário insere seu nome -->
+            <button onclick="startChat()">Iniciar Chat</button>
+            <!-- Botão que chama a função "startChat()" ao ser clicado, para validar e iniciar o chat -->
+        </div>
+
+        <!-- Lista de tópicos de dúvida -->
+        <div class="chat-topics" id="chat-topics" style="display: none;">
+            <!-- Essa área contém opções de tópicos para o usuário escolher -->
+            <h4>Tópicos de Dúvidas</h4>
+            <!-- Título dessa seção -->
+            <ul>
+                <!-- Lista não ordenada de tópicos -->
+                <li onclick="showResponse('Quais os horários de funcionamento?')">Horário de Funcionamento</li>
+                <!-- Um item da lista que, ao ser clicado, chama a função "showResponse()" com a pergunta específica -->
+                <li onclick="showResponse('Qual é o endereço da empresa?')">Endereço</li>
+                <li onclick="showResponse('Por onde posso entrar em contato?')">Contato</li>
+                <li onclick="showResponse('Quais são os serviços disponíveis?')">Serviços</li>
+                <li onclick="showResponse('Fale Conosco!')">Fale Conosco</li>
+                <!-- Mais itens clicáveis para diferentes perguntas -->
+            </ul>
+        </div>
+
+        <!-- Área para exibir mensagens -->
+        <div class="chat-messages" id="chat-messages" style="display: none;">
+            <!-- Inicialmente escondida, essa área mostra as mensagens trocadas -->
+            <div class="typing-indicator" id="typing-indicator">Digitando...</div>
+            <!-- Um indicador de "Digitando..." que aparece quando o bot está processando uma resposta -->
+        </div>
+
+        <!-- Campo de entrada para envio de mensagens -->
+        <div class="chat-input" id="chat-input" style="display: none;">
+            <!-- Inicialmente escondida, essa área é exibida após o início do chat -->
+            <input type="text" id="chat-input-text" placeholder="Digite sua mensagem...">
+            <!-- Campo de texto para o usuário digitar sua mensagem -->
+            <button onclick="sendMessage()">Enviar</button>
+            <!-- Botão que chama a função "sendMessage()" ao ser clicado, enviando a mensagem digitada -->
+        </div>
+    </div>
+
+    <div class="chat-messages" id="chat-messages" style="display: block;">
+        <!-- As mensagens serão exibidas aqui -->
+    </div>
+
+    <!-- Lógica em JavaScript para controlar o comportamento do chat -->
+    <script>
+        let username = '';
+        // Variável global para armazenar o nome do usuário
+
+        function getCurrentTime() {
+            let now = new Date();
+            let hours = now.getHours();
+            let minutes = now.getMinutes();
+
+            // Adiciona zero à esquerda se for menor que 10
+            hours = hours < 10 ? '0' + hours : hours;
+            minutes = minutes < 10 ? '0' + minutes : minutes;
+
+            return hours + ':' + minutes;
+        }
+
+        function toggleChat() {
+            // Função para alternar a exibição do chat
+            const chatContainer = document.getElementById('chat-container');
+            chatContainer.classList.toggle('show');
+            // Usado para alternar entre dois estados visuais de um elemento
+            const chatIcon = document.querySelector('.chat-icon');
+
+            if (chatContainer.style.display === 'flex') {
+                // Se o chat estiver visível, esconde-o
+                chatContainer.style.display = 'none';
+                chatIcon.style.display = 'flex';
+            } else {
+                // Se o chat estiver escondido, exibe-o
+                chatContainer.style.display = 'flex';
+            }
+        }
+
+        // Função para iniciar o chat após inserir o nome do usuário
+        function startChat() {
+            username = document.getElementById('username').value.trim();
+            // Obtém o valor do campo de texto, removendo espaços desnecessários
+
+            if (username) {
+                // Se o nome do usuário for válido, esconde a área de entrada do nome e exibe o chat
+                document.getElementById('username-input-container').style.display = 'none';
+                document.getElementById('chat-topics').style.display = 'block';
+                document.getElementById('chat-messages').style.display = 'block';
+                document.getElementById('chat-input').style.display = 'flex';
+
+                appendMessage('bot', `Olá, ${username}! Como posso ajudá-lo hoje?`);
+                // Mensagem de boas-vindas
+            } else {
+                // Caso o nome esteja vazio, exibe um alerta
+                alert('Por favor, digite seu nome para iniciar o chat.');
+            }
+        }
+
+        const messagesContainer = document.getElementById('chat-messages');
+        // Seleciona a área onde as mensagens serão exibidas
+        const typingIndicator = document.getElementById('typing-indicator');
+        // Seleciona o indicador de "Digitando..."
+
+        // Função para exibir uma resposta com base no tópico selecionado
+        function showResponse(topic) {
+            const responses = {
+                'Quais os horários de funcionamento?': 'Estamos abertos de segunda a sexta, das 9h às 18h.',
+                'Qual é o endereço da empresa?': 'Nossa loja está localizada na Rua Exemplo, 123, Centro.',
+                'Por onde posso entrar em contato?': 'Você pode nos contatar pelo telefone (XX) 1234-5678 ou pelo email contato@empresa.com.',
+                'Quais são os serviços disponíveis?': 'Oferecemos uma variedade de serviços, incluindo suporte técnico e consultoria.',
+                'Fale Conosco!': 'Você solicitou um atendente. Por favor, aguarde enquanto transferimos você para um de nossos funcionários.'
+            };
+            // Objeto com as respostas automáticas para cada tópico
+
+            const response = responses[topic];
+            // Obtém a resposta correspondente ao tópico selecionado
+
+            appendMessage('user', topic);
+            // Adiciona a mensagem do usuário ao chat
+            showTypingIndicator();
+            // Mostra o indicador de "Digitando..."
+
+            setTimeout(() => {
+                hideTypingIndicator();
+                // Esconde o indicador de "Digitando..."
+                appendMessage('bot', response);
+                // Adiciona a mensagem do bot ao chat
+            }, 2000);
+            // Simula um atraso de 2 segundos para a resposta do bot
+        }
+
+        // Função para adicionar uma mensagem ao chat
+        function appendMessage(sender, message) {
+            const messageElement = document.createElement('div');
+            // Cria um elemento div para a mensagem
+            messageElement.classList.add('message', sender);
+            // Adiciona as classes "message" e o tipo (user ou bot)
+            messageElement.textContent = message;
+            // Define o texto da mensagem
+            messagesContainer.appendChild(messageElement);
+            // Adiciona a mensagem ao contêiner de mensagens
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+            // Rola para o final do contêiner para exibir a mensagem mais recente
+        }
+
+        // Função para mostrar o indicador de "Digitando..."
+        function showTypingIndicator() {
+            typingIndicator.style.display = 'block';
+        }
+
+        // Função para esconder o indicador de "Digitando..."
+        function hideTypingIndicator() {
+            typingIndicator.style.display = 'none';
+        }
+
+        // Função para enviar uma mensagem manualmente
+        function sendMessage() {
+            const input = document.getElementById('chat-input-text');
+            // Obtém o campo de entrada onde o usuário digita a mensagem
+            const userMessage = input.value.trim();
+            // Obtém o valor da mensagem, removendo espaços extras no início e no fim
+            const messagesContainer = document.getElementById('chat-messages');
+            // Obtém o contêiner onde as mensagens são exibidas
+
+            if (userMessage) {
+                // Verifica se o campo de entrada não está vazio
+                const topics = [
+                    // Define um array com alguns tópicos válidos
+                    'Horário de Funcionamento',
+                    'Endereço',
+                    'Contato',
+                    'Serviços',
+                    'Fale conosco'
+                ];
+
+                // Exibe a mensagem do usuário no chat
+                appendMessage('user', userMessage);
+                // Chama a função appendMessage para adicionar a mensagem do usuário ao chat
+
+                // Se a mensagem não corresponder a nenhum dos tópicos, envia uma resposta padrão
+                if (!topics.includes(userMessage)) {
+                    // Verifica se a mensagem do usuário está na lista de tópicos
+                    const suggestionMessage = "DESCULPE-ME! NÃO CONSEGUI ENTENDER SUA DÚVIDA. VAMOS ENCAMINHÁ-LO PARA UM DE NOSSOS ATENDENTES!";
+                    // Mensagem de sugestão para o usuário
+                    setTimeout(() => {
+                        // Usa um timeout para simular o tempo de resposta do bot
+                        appendMessage('bot', suggestionMessage, true);
+                        // Chama a função appendMessage para exibir a sugestão, marcando-a como mensagem de atenção
+                    }, 700);
+                    // Aguarda 700ms antes de mostrar a resposta do bot
+                }
+
+                input.value = '';
+                // Limpa o campo de entrada para que o usuário possa digitar outra mensagem
+            }
+        }
+
+        function appendMessage(sender, message, isAttention = false) {
+            const messageElement = document.createElement('div');
+            // Cria um novo elemento 'div' para a mensagem
+            messageElement.classList.add('message', sender);
+            // Adiciona as classes 'message' e 'sender' (pode ser 'user' ou 'bot')
+
+            // Se for uma mensagem de atenção, adiciona a classe 'attention'
+            if (isAttention) {
+                messageElement.classList.add('attention');
+                // Aplica o estilo com a fonte menor
+            }
+
+            // Cria um novo elemento para a hora
+            const timeElement = document.createElement('span');
+            timeElement.classList.add('time'); // Classe para o estilo da hora
+            timeElement.textContent = getCurrentTime(); // Define a hora atual
+
+            // Cria um elemento para o conteúdo da mensagem
+            const messageContent = document.createElement('span');
+
+            messageElement.textContent = message;
+            // Define o conteúdo de texto da mensagem
+            // Adiciona a hora e o conteúdo da mensagem ao 'messageElement'
+            messageElement.appendChild(timeElement);
+            messageElement.appendChild(messageContent);
+            // Adiciona a mensagem ao contêiner de mensagens
+            messagesContainer.appendChild(messageElement);
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+            // Rola para a última mensagem para garantir que a mais recente esteja visível
+        }
+
+        document.getElementById('chat-input-text').addEventListener('keypress', function (e) {
+            // Seleciona o campo de entrada de texto (com id 'chat-input-text')
+            // e adiciona um ouvinte de evento para o evento 'keypress'.
+            // Esse ouvinte é ativado toda vez que uma tecla é pressionada dentro do campo de texto.
+
+            if (e.key === 'Enter') {
+                // Verifica se a tecla pressionada foi a tecla 'Enter'.
+                // Se a tecla pressionada for 'Enter', o código dentro do bloco 'if' será executado.
+
+                sendMessage();
+                // Chama a função 'sendMessage()', que envia a mensagem digitada pelo usuário.
+
+                e.preventDefault();
+                // Impede o comportamento padrão do 'Enter', que seria adicionar uma quebra de linha no campo de texto.
+                // Isso faz com que o 'Enter' seja usado apenas para enviar a mensagem e não para criar uma nova linha.
+            }
+        });
+    </script>
+</body>
+
+</html>
